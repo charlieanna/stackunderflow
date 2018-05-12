@@ -16,11 +16,10 @@
       <table border = 1>
          {% for row in results %}
             <tr>
-               <th> {{ row.tags }} </th>
-               <td>{{ row.id }}</td>
+               <th> {{ " ".join(row.tags.split("|")) }} </th>
                <td> {{ row.score }} </td>
                <td> {{ row.title }} </td>
-               <td><a href="https://stackoverflow.com/questions/{{row.id}}" target="_blank">Click here</a></td>
+               <td><a href="https://stackoverflow.com/questions/{{row.id}}" target="_blank">See question</a></td>
             </tr>
          {% endfor %}
       </table>
