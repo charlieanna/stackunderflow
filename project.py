@@ -38,7 +38,7 @@ def result():
               FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
               where  questions.tags like @a
               order by questions.score desc
-              limit 5
+              limit 20
               """
       query_params = [
           bigquery.ScalarQueryParameter(
