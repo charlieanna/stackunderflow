@@ -17,19 +17,19 @@
          {% for row in results %}
             <tr>
                <th> {{ row.tags }} </th>
+               <td>{{ row.id }}</td>
                <td> {{ row.score }} </td>
                <td> {{ row.title }} </td>
-               <td> {{ row.body }} </td>
-               <td> {{ row.ascore }} </td>
+               <td><a href="https://stackoverflow.com/questions/{{row.id}}" target="_blank">Click here</a></td>
             </tr>
          {% endfor %}
       </table>
 
       <table border = 1>
-         {% for key, value in v1.items() %}
+         {% for n in num %}
             <tr>
-               <th> {{ key }} </th>
-               <td> {{ value }} </td>
+               <th> {{ n }} </th>
+               <td> {{ v1[n] }} </td>
             </tr>
          {% endfor %}
       </table>

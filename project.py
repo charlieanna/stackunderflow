@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 import pickle
 import csv #For importing data from a csv file
 from collections import defaultdict
-
+from sklearn.cluster import KMeans
+        
 app = Flask(__name__)
 
 @app.route("/")
@@ -33,12 +34,10 @@ def result():
 
       word = similar_words[0][0]
       query = """
-              SELECT questions.tags as tags, questions.score as score, questions.title as title, answers.body as body, answers.score as ascore
+              SELECT id, questions.tags as tags, questions.score as score, questions.title as title
               FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
-              INNER JOIN `bigquery-public-data.stackoverflow.posts_answers` as answers
-              on questions.id = answers.parent_id
               where  questions.tags like @a
-              order by questions.score desc, answers.score desc
+              order by questions.score desc
               limit 5
               """
       query_params = [
@@ -49,13 +48,16 @@ def result():
       job_config.query_parameters = query_params
       query_job = client.query(query, job_config=job_config)
       results = query_job.result()
-      from sklearn.cluster import KMeans
-      kmeans = KMeans(n_clusters=100 )
-      X = word2vec_model[word2vec_model.wv.vocab]
-      kmeans.fit(X)
 
-      model = pickle.dumps(kmeans)
-      kmeans = pickle.loads(model)
+      filename = 'finalized_model.sav'
+
+      if not os.path.exists(filename):
+        kmeans = KMeans(n_clusters=100 )
+        X = word2vec_model[word2vec_model.wv.vocab]
+        kmeans.fit(X)        
+        pickle.dump(kmeans, open(filename, 'wb'))
+      else:
+        kmeans = pickle.load(open(filename, 'rb'))
       labels = kmeans.labels_
 
       word_cluster1 = {}
@@ -68,7 +70,13 @@ def result():
           v1[value].append(key)
           v2[key] = value
 
-      return render_template("result.html",result = result, similar_words = dict(similar_words), results = results, v1 = v1, v2 = v2)
+      v = {}
+      num = set()
+      for word in similar_words:
+        # show only matching clusters. 
+        num.add(v2[word[0]])
+
+      return render_template("result.html",result = result, similar_words = dict(similar_words), results = results, v1 = v1, v2 = v2, num=  num)
 
 def load_data():
     file_name = "../data.csv"
