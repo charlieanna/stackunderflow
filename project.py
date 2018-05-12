@@ -50,13 +50,17 @@ def index():
     }
     scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults)
 
-    scheduler.add_job(
-    func=print_date_time,
-    trigger=IntervalTrigger(seconds=5),
-    id='printing_job',
-    name='Print date and time every five seconds',
-    replace_existing=True)
-
+    # scheduler.add_job(
+    # func=print_date_time,
+    # trigger=IntervalTrigger(days = 1),
+    # replace_existing=True)
+    from datetime import date
+    from datetime import datetime 
+    from datetime import timedelta  
+    #Subtract 60 seconds  
+    scheduler.add_job(print_date_time, 'date', run_date=datetime.now() + timedelta(seconds=2)  ,replace_existing=True)
+    
+   # scheduler.add_job(print_date_time, 'date', run_date=date(2009, 11, 6), args=['text'])
     scheduler.start()
 # Shut down the scheduler when exiting the app
     atexit.register(lambda: scheduler.shutdown())
@@ -65,8 +69,34 @@ def index():
 
 def print_date_time():
   with app.app_context():
-    msg = Message('Hello', sender = 'ankothari@gmail.com', recipients = ['akotha01@syr.edu'])
-    msg.body = "This is the email body"
+    username = "Ankur Kothari"
+    msg = Message("New questions for the day",
+      sender="ankothari@gmail.com",
+      recipients=["akotha01@syr.edu"])
+    word2vec_model, fasttext_model = load_models()
+      # Once the model has been calculated, it is easy and fast to find most similar words.
+    similar_words = fasttext_model.wv.most_similar(['algorithms'], topn=10)
+    client = bigquery.Client.from_service_account_json('../../My_Project-c23185ac100b.json')
+    word = similar_words[0][0]
+    query = """
+            SELECT id, questions.tags as tags, questions.score as score, questions.title as title
+            FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
+            where  questions.tags like @a
+            order by questions.score desc
+            limit 20
+            """
+    query_params = [
+        bigquery.ScalarQueryParameter(
+            'a', 'STRING', "%"+word+"%")
+        ]
+    job_config = bigquery.QueryJobConfig()
+    job_config.query_parameters = query_params
+    query_job = client.query(query, job_config=job_config)
+    results = query_job.result()
+
+    msg.body = 'Hello '+username+',\nThese are the new questions for you, can you answer them?'
+    msg.html = render_template('/mails/mail.html', username=username, results = results, similar_words = dict(similar_words))
+
     mail.send(msg)
     print("time", time.strftime("%A, %d. %B %Y %I:%M:%S %p"))
 
