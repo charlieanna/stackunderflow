@@ -21,18 +21,19 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 import time
 import atexit
-
+from config import config
+  
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 app = Flask(__name__)
 
-app.config['MAIL_SERVER']='smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = 'ankothari@gmail.com'
-app.config['MAIL_PASSWORD'] = 'Ar002972'
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_SERVER']=config['MAIL_SERVER']
+app.config['MAIL_PORT'] = config['MAIL_PORT']
+app.config['MAIL_USERNAME'] = config['MAIL_USERNAME']
+app.config['MAIL_PASSWORD'] = config['MAIL_PASSWORD']
+app.config['MAIL_USE_TLS'] = config['MAIL_USE_TLS']
+app.config['MAIL_USE_SSL'] = config['MAIL_USE_SSL']
 
 mail = Mail(app)
 @app.route("/")
