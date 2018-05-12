@@ -1,17 +1,37 @@
 <!doctype html>
 <html>
    <body>
-
       <table border = 1>
          {% for key, value in similar_words.items() %}
 
             <tr>
                <th> {{ key }} </th>
                <td> {{ value }} </td>
+               <td> {{ v2[key] }} </td>
             </tr>
 
          {% endfor %}
       </table>
 
+      <table border = 1>
+         {% for row in results %}
+            <tr>
+               <th> {{ row.tags }} </th>
+               <td> {{ row.score }} </td>
+               <td> {{ row.title }} </td>
+               <td> {{ row.body }} </td>
+               <td> {{ row.ascore }} </td>
+            </tr>
+         {% endfor %}
+      </table>
+
+      <table border = 1>
+         {% for key, value in v1.items() %}
+            <tr>
+               <th> {{ key }} </th>
+               <td> {{ value }} </td>
+            </tr>
+         {% endfor %}
+      </table>
    </body>
 </html>
