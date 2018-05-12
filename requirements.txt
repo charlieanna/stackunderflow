@@ -1,6 +1,6 @@
 absl-py==0.1.8
 alabaster==0.7.10
-anaconda-client==1.6.5
+anaconda-client==1.4
 anaconda-navigator==1.6.11
 anaconda-project==0.8.0
 appnope==0.1.0
