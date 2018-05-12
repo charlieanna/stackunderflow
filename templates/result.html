@@ -1,5 +1,11 @@
 <!doctype html>
 <html>
+   <head>
+    <title>StackUnderFlow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
    <body>
       <table border = 1>
          {% for key, value in similar_words.items() %}
@@ -32,5 +38,7 @@
             </tr>
          {% endfor %}
       </table>
+      <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
    </body>
 </html>

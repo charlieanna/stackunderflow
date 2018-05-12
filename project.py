@@ -13,12 +13,63 @@ import pickle
 import csv #For importing data from a csv file
 from collections import defaultdict
 from sklearn.cluster import KMeans
-        
+from flask_mail import Mail
+from flask_mail import Message
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.jobstores.mongodb import MongoDBJobStore
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+import time
+import atexit
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+
 app = Flask(__name__)
 
+app.config['MAIL_SERVER']='smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = 'ankothari@gmail.com'
+app.config['MAIL_PASSWORD'] = 'Ar002972'
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+
+mail = Mail(app)
 @app.route("/")
 def index():
+    jobstores = {
+        'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')
+    }
+    executors = {
+        'default': ThreadPoolExecutor(20),
+        'processpool': ProcessPoolExecutor(5)
+    }
+    job_defaults = {
+        'coalesce': False,
+        'max_instances': 3
+    }
+    scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults)
+
+    scheduler.add_job(
+    func=print_date_time,
+    trigger=IntervalTrigger(seconds=5),
+    id='printing_job',
+    name='Print date and time every five seconds',
+    replace_existing=True)
+
+    scheduler.start()
+# Shut down the scheduler when exiting the app
+    atexit.register(lambda: scheduler.shutdown())
+    
     return render_template('index.html')
+
+def print_date_time():
+  with app.app_context():
+    msg = Message('Hello', sender = 'ankothari@gmail.com', recipients = ['akotha01@syr.edu'])
+    msg.body = "This is the email body"
+    mail.send(msg)
+    print("time", time.strftime("%A, %d. %B %Y %I:%M:%S %p"))
+
 
 @app.route('/result',methods = ['POST', 'GET'])
 def result():
