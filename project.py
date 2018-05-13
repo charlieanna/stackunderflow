@@ -106,6 +106,7 @@ def send_questions():
             SELECT id, questions.tags as tags, questions.score as score, questions.title as title
             FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
             where  questions.tags like @a
+            and title not like "%closed%"
             order by questions.score desc
             limit 20
             """
@@ -142,6 +143,7 @@ def result():
               SELECT id, questions.tags as tags, questions.score as score, questions.title as title
               FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
               where  questions.tags like @a
+              and title not like "%closed%"
               order by questions.score desc
               limit 20
               """
