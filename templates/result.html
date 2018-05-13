@@ -19,36 +19,7 @@
          {% endfor %}
       </table>
 
-      <table border = 1>
-         {% for row in results %}
-            <tr>
-               <th> {{ " ".join(row.tags.split("|")) }} </th>
-               <td> {{ row.score }} </td>
-               <td> {{ row.title }} </td>
-               <td><a href="https://stackoverflow.com/questions/{{row.id}}" target="_blank">See question</a></td>
-            </tr>
-         {% endfor %}
-      </table>
-
-      <table border = 1>
-         {% for row in results1 %}
-            <tr>
-               <th> {{ " ".join(row.tags.split("|")) }} </th>
-               <td> {{ row.score }} </td>
-               <td> {{ row.title }} </td>
-               <td><a href="https://stackoverflow.com/questions/{{row.id}}" target="_blank">See question</a></td>
-            </tr>
-         {% endfor %}
-      </table>
-
-      <table border = 1>
-         {% for n in num %}
-            <tr>
-               <th> {{ n }} </th>
-               <td> {{ v1[n] }} </td>
-            </tr>
-         {% endfor %}
-      </table>
+     
       <script src="http://code.jquery.com/jquery.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
    </body>

@@ -25,8 +25,9 @@ from config import config
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from flask_api import FlaskAPI
 
-app = Flask(__name__)
+app = FlaskAPI(__name__)
 
 app.config['MAIL_SERVER']=config['MAIL_SERVER']
 app.config['MAIL_PORT'] = config['MAIL_PORT']
@@ -36,9 +37,11 @@ app.config['MAIL_USE_TLS'] = config['MAIL_USE_TLS']
 app.config['MAIL_USE_SSL'] = config['MAIL_USE_SSL']
 
 mail = Mail(app)
+
+
 @app.route("/")
 def index():
-   # defining the api-endpoint 
+    # defining the api-endpoint 
     # API_ENDPOINT = "https://stackoverflow.com/oauth/access_token"     
     # # data to be sent to api
     # data = {'client_id':12430,
@@ -90,22 +93,18 @@ def top_questions():
   # get all the questions on this tag selected by the user sorted descending, this way u can get the most important topics
   # or tags which are important.
   query = """
-          SELECT id, questions.tags as tags, questions.score as score, questions.title as title
+          SELECT id, questions.tags as tags, questions.score as score, questions.title as title, questions.body as body
           FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
           where title not like "%closed%"
           order by questions.score desc
-          limit 200
+          limit 20
           """
 
   job_config = bigquery.QueryJobConfig()
   query_job = client.query(query, job_config=job_config)
   results = query_job.result()
 
-
-
-
-
-  return render_template("top.html",result = result, results = results)
+  return {'results': [[row.tags, row.id, row.score, row.title, row.body] for row in results]}
 
 def send_questions():
   with app.app_context():
@@ -124,7 +123,7 @@ def send_questions():
             where  questions.tags like @a
             and title not like "%closed%"
             order by questions.score desc
-            limit 20
+            limit 5
             """
     query_params = [
         bigquery.ScalarQueryParameter(
@@ -156,7 +155,7 @@ def result():
 
       word = similar_words[0][0]
       query = """
-              SELECT id, questions.tags as tags, questions.score as score, questions.title as title
+              SELECT id, questions.tags as tags, questions.score as score, questions.title as title, questions.body as body
               FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
               where  questions.tags like @a
               and title not like "%closed%"
@@ -190,8 +189,8 @@ def result():
       v1 = defaultdict(list)
       v2 = {}
       for key, value in sorted(word_cluster1.items()):
-          v1[value].append(key)
-          v2[key] = value
+          v1[int(value)].append(key)
+          v2[key] = int(value)
 
       v = {}
       num = set()
@@ -201,7 +200,7 @@ def result():
 
 
       query = """
-              SELECT id, questions.tags as tags, questions.score as score, questions.title as title
+              SELECT id, questions.tags as tags, questions.score as score, questions.title as title,  questions.body as body
               FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
               where  questions.tags like @a and questions.score > 0
               order by questions.score
@@ -216,11 +215,8 @@ def result():
       job_config.query_parameters = query_params
       query_job = client.query(query, job_config=job_config)
       results1 = query_job.result()
+      return {'similar_words': dict(similar_words), 'results1': [[row.tags, row.id, row.score, row.title, row.body] for row in results1], 'results': [[row.tags, row.id,row.score, row.title, row.body] for row in results], 'v2': dict(v2), 'v1': v1, 'num': list(num)}
 
-
-
-
-      return render_template("result.html",result = result, similar_words = dict(similar_words), results1 = results1, results = results, v1 = v1, v2 = v2, num=  num)
 
 def load_data():
     file_name = "../data.csv"
