@@ -99,7 +99,7 @@ def send_questions():
       recipients=["akotha01@syr.edu"])
     word2vec_model, fasttext_model = load_models()
       # Once the model has been calculated, it is easy and fast to find most similar words.
-    similar_words = fasttext_model.wv.most_similar(['algorithms'], topn=10)
+    similar_words = fasttext_model.wv.most_similar(['algorithms'], topn=20)
     client = bigquery.Client.from_service_account_json('../../My_Project-c23185ac100b.json')
     word = similar_words[0][0]
     query = """
@@ -181,7 +181,28 @@ def result():
         # show only matching clusters. 
         num.add(v2[word[0]])
 
-      return render_template("result.html",result = result, similar_words = dict(similar_words), results = results, v1 = v1, v2 = v2, num=  num)
+
+      query = """
+              SELECT id, questions.tags as tags, questions.score as score, questions.title as title
+              FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
+              where  questions.tags like @a and questions.score > 0
+              order by questions.score
+              limit 20
+              """
+      word = similar_words[0][0]
+      query_params = [
+          bigquery.ScalarQueryParameter(
+              'a', 'STRING', "%"+word+"%")
+          ]
+      job_config = bigquery.QueryJobConfig()
+      job_config.query_parameters = query_params
+      query_job = client.query(query, job_config=job_config)
+      results1 = query_job.result()
+
+
+
+
+      return render_template("result.html",result = result, similar_words = dict(similar_words), results1 = results1, results = results, v1 = v1, v2 = v2, num=  num)
 
 def load_data():
     file_name = "../data.csv"
