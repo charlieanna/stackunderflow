@@ -8,22 +8,10 @@
   </head>
    <body>
 	   	<p>Hello {{username}},</p>
-      <table border = 1>
-         {% for key, value in similar_words.items() %}
-
-            <tr>
-               <th> {{ key }} </th>
-               <td> {{ value }} </td>
-            </tr>
-
-         {% endfor %}
-      </table>
-
+      
       <table border = 1>
          {% for row in results %}
             <tr>
-               <th> {{ " ".join(row.tags.split("|")) }} </th>
-               <td> {{ row.score }} </td>
                <td> {{ row.title }} </td>
                <td><a href="https://stackoverflow.com/questions/{{row.id}}" target="_blank">See question</a></td>
             </tr>

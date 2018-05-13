@@ -38,6 +38,30 @@ app.config['MAIL_USE_SSL'] = config['MAIL_USE_SSL']
 mail = Mail(app)
 @app.route("/")
 def index():
+
+    # importing the requests library
+    import requests
+     
+    # defining the api-endpoint 
+    API_ENDPOINT = "https://stackoverflow.com/oauth/access_token"
+     
+    
+     
+    # data to be sent to api
+    data = {'client_id':12430,
+            'client_secret':'9*Kyrtrtb*iwc6v4soDAuw((',
+            'code':'DNkk4aD9QkkCjzvvRQc8uQ))',
+            'redirect_uri':'http://localhost:5000'}
+     
+    # sending post request and saving response as response object
+    r = requests.post(url = API_ENDPOINT, data = data)
+    print(r)
+    # extracting response text 
+    response = r.text
+    access_token = response.split("=")[1]
+    print("access_token:", response.split("=")[1])
+
+
     jobstores = {
         'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')
     }
@@ -52,23 +76,22 @@ def index():
     scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults)
 
     # scheduler.add_job(
-    # func=print_date_time,
+    # func=send_questions,
     # trigger=IntervalTrigger(days = 1),
     # replace_existing=True)
     from datetime import date
     from datetime import datetime 
     from datetime import timedelta  
-    #Subtract 60 seconds  
-    scheduler.add_job(print_date_time, 'date', run_date=datetime.now() + timedelta(seconds=2)  ,replace_existing=True)
+    scheduler.add_job(send_questions, 'date', run_date=datetime.now() + timedelta(seconds=2)  ,replace_existing=True)
     
-   # scheduler.add_job(print_date_time, 'date', run_date=date(2009, 11, 6), args=['text'])
+    # scheduler.add_job(print_date_time, 'date', run_date=date(2009, 11, 6), args=['text'])
     scheduler.start()
-# Shut down the scheduler when exiting the app
+    # Shut down the scheduler when exiting the app
     atexit.register(lambda: scheduler.shutdown())
     
     return render_template('index.html')
 
-def print_date_time():
+def send_questions():
   with app.app_context():
     username = "Ankur Kothari"
     msg = Message("New questions for the day",
