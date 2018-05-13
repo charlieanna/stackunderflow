@@ -22,7 +22,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 import time
 import atexit
 from config import config
-  
+import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
@@ -38,28 +38,21 @@ app.config['MAIL_USE_SSL'] = config['MAIL_USE_SSL']
 mail = Mail(app)
 @app.route("/")
 def index():
-
-    # importing the requests library
-    import requests
+   # defining the api-endpoint 
+    # API_ENDPOINT = "https://stackoverflow.com/oauth/access_token"     
+    # # data to be sent to api
+    # data = {'client_id':12430,
+    #         'client_secret':'9*Kyrtrtb*iwc6v4soDAuw((',
+    #         'code':'DNkk4aD9QkkCjzvvRQc8uQ))',
+    #         'redirect_uri':'http://localhost:5000'}
      
-    # defining the api-endpoint 
-    API_ENDPOINT = "https://stackoverflow.com/oauth/access_token"
-     
-    
-     
-    # data to be sent to api
-    data = {'client_id':12430,
-            'client_secret':'9*Kyrtrtb*iwc6v4soDAuw((',
-            'code':'DNkk4aD9QkkCjzvvRQc8uQ))',
-            'redirect_uri':'http://localhost:5000'}
-     
-    # sending post request and saving response as response object
-    r = requests.post(url = API_ENDPOINT, data = data)
-    print(r)
-    # extracting response text 
-    response = r.text
-    access_token = response.split("=")[1]
-    print("access_token:", response.split("=")[1])
+    # # sending post request and saving response as response object
+    # r = requests.post(url = API_ENDPOINT, data = data)
+    # print(r)
+    # # extracting response text 
+    # response = r.text
+    # access_token = response.split("=")[1]
+    # print("access_token:", response.split("=")[1])
 
 
     jobstores = {
@@ -90,6 +83,29 @@ def index():
     atexit.register(lambda: scheduler.shutdown())
     
     return render_template('index.html')
+
+@app.route("/top")
+def top_questions():
+  client = bigquery.Client.from_service_account_json('../../My_Project-c23185ac100b.json')
+  # get all the questions on this tag selected by the user sorted descending, this way u can get the most important topics
+  # or tags which are important.
+  query = """
+          SELECT id, questions.tags as tags, questions.score as score, questions.title as title
+          FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
+          where title not like "%closed%"
+          order by questions.score desc
+          limit 200
+          """
+
+  job_config = bigquery.QueryJobConfig()
+  query_job = client.query(query, job_config=job_config)
+  results = query_job.result()
+
+
+
+
+
+  return render_template("top.html",result = result, results = results)
 
 def send_questions():
   with app.app_context():
@@ -212,6 +228,7 @@ def load_data():
         reader = csv.reader(f)
         data = list(list(rec) for rec in csv.reader(f, delimiter=',')) #reads csv into a list of lists
         return data
+
 
     
 
