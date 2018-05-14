@@ -81,7 +81,7 @@ def index():
     scheduler.add_job(send_questions, 'date', run_date=datetime.now() + timedelta(seconds=2)  ,replace_existing=True)
     
     # scheduler.add_job(print_date_time, 'date', run_date=date(2009, 11, 6), args=['text'])
-    scheduler.start()
+    # scheduler.start()
     # Shut down the scheduler when exiting the app
     atexit.register(lambda: scheduler.shutdown())
     
@@ -148,28 +148,27 @@ def result():
       word2vec_model, fasttext_model = load_models()
       # Once the model has been calculated, it is easy and fast to find most similar words.
       similar_words = fasttext_model.wv.most_similar([result['word']], topn=10)
-
       client = bigquery.Client.from_service_account_json('../../My_Project-c23185ac100b.json')
-      # get all the questions on this tag selected by the user sorted descending, this way u can get the most important topics
-  # or tags which are important.
-
-      word = similar_words[0][0]
-      query = """
-              SELECT id, questions.tags as tags, questions.score as score, questions.title as title, questions.body as body
-              FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
-              where  questions.tags like @a
-              and title not like "%closed%"
-              order by questions.score desc
-              limit 20
-              """
-      query_params = [
-          bigquery.ScalarQueryParameter(
-              'a', 'STRING', "%"+word+"%")
-          ]
-      job_config = bigquery.QueryJobConfig()
-      job_config.query_parameters = query_params
-      query_job = client.query(query, job_config=job_config)
-      results = query_job.result()
+      questions = {}
+      for similar_word in similar_words:
+        word = similar_word[0]
+        query = """
+                SELECT id, questions.tags as tags, questions.score as score, questions.title as title, questions.body as body
+                FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
+                where  questions.tags like @a
+                and title not like "%closed%"
+                order by questions.score desc
+                limit 20
+                """
+        query_params = [
+            bigquery.ScalarQueryParameter(
+                'a', 'STRING', "%"+word+"%")
+            ]
+        job_config = bigquery.QueryJobConfig()
+        job_config.query_parameters = query_params
+        query_job = client.query(query, job_config=job_config)
+        results = query_job.result()
+        questions[word] = [[row.tags, row.id,row.score, row.title, row.body] for row in results]
 
       filename = 'finalized_model.sav'
 
@@ -197,25 +196,28 @@ def result():
       for word in similar_words:
         # show only matching clusters. 
         num.add(v2[word[0]])
+      pending_questions = {}
+      # for similar_word in similar_words:
+      #   word = similar_word[0]
+      #   query = """
+      #           SELECT id, questions.tags as tags, questions.score as score, questions.title as title,  questions.body as body
+      #           FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
+      #           where  questions.tags like @a and questions.score > 0
+      #           order by questions.score
+      #           limit 20
+      #           """
+      #   word = similar_words[0][0]
+      #   query_params = [
+      #       bigquery.ScalarQueryParameter(
+      #           'a', 'STRING', "%"+word+"%")
+      #       ]
+      #   job_config = bigquery.QueryJobConfig()
+      #   job_config.query_parameters = query_params
+      #   query_job = client.query(query, job_config=job_config)
+      #   results1 = query_job.result()
+      #   pending_questions[word] = [[row.tags, row.id,row.score, row.title, row.body] for row in results1]
 
-
-      query = """
-              SELECT id, questions.tags as tags, questions.score as score, questions.title as title,  questions.body as body
-              FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
-              where  questions.tags like @a and questions.score > 0
-              order by questions.score
-              limit 20
-              """
-      word = similar_words[0][0]
-      query_params = [
-          bigquery.ScalarQueryParameter(
-              'a', 'STRING', "%"+word+"%")
-          ]
-      job_config = bigquery.QueryJobConfig()
-      job_config.query_parameters = query_params
-      query_job = client.query(query, job_config=job_config)
-      results1 = query_job.result()
-      return {'similar_words': dict(similar_words), 'results1': [[row.tags, row.id, row.score, row.title, row.body] for row in results1], 'results': [[row.tags, row.id,row.score, row.title, row.body] for row in results], 'v2': dict(v2), 'v1': v1, 'num': list(num)}
+      return {'similar_words': dict(similar_words), 'questions': questions, 'v2': dict(v2), 'v1': v1, 'num': list(num)}
 
 
 def load_data():
