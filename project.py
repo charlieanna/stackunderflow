@@ -41,18 +41,18 @@ mail = Mail(app)
 
 @app.route("/")
 def index():
-    # defining the api-endpoint 
-    # API_ENDPOINT = "https://stackoverflow.com/oauth/access_token"     
+    # defining the api-endpoint
+    # API_ENDPOINT = "https://stackoverflow.com/oauth/access_token"
     # # data to be sent to api
     # data = {'client_id':12430,
     #         'client_secret':'9*Kyrtrtb*iwc6v4soDAuw((',
     #         'code':'DNkk4aD9QkkCjzvvRQc8uQ))',
     #         'redirect_uri':'http://localhost:5000'}
-     
+
     # # sending post request and saving response as response object
     # r = requests.post(url = API_ENDPOINT, data = data)
     # print(r)
-    # # extracting response text 
+    # # extracting response text
     # response = r.text
     # access_token = response.split("=")[1]
     # print("access_token:", response.split("=")[1])
@@ -76,15 +76,15 @@ def index():
     # trigger=IntervalTrigger(days = 1),
     # replace_existing=True)
     from datetime import date
-    from datetime import datetime 
-    from datetime import timedelta  
+    from datetime import datetime
+    from datetime import timedelta
     scheduler.add_job(send_questions, 'date', run_date=datetime.now() + timedelta(seconds=2)  ,replace_existing=True)
-    
+
     # scheduler.add_job(print_date_time, 'date', run_date=date(2009, 11, 6), args=['text'])
     # scheduler.start()
     # Shut down the scheduler when exiting the app
     atexit.register(lambda: scheduler.shutdown())
-    
+
     return render_template('index.html')
 
 @app.route("/top")
@@ -106,6 +106,34 @@ def top_questions():
 
   return {'results': [[row.tags, row.id, row.score, row.title, row.body] for row in results]}
 
+@app.route("/question")
+def question():
+  # get all the anwswers of this question
+  client = bigquery.Client.from_service_account_json('../../My_Project-c23185ac100b.json')
+  # get all the questions on this tag selected by the user sorted descending, this way u can get the most important topics
+  # or tags which are important.
+  # get all the questions on this tag selected by the user sorted descending, this way u can get the most important topics 
+# or tags which are important. 
+  result = request.args
+  question_id = result.get("id")
+  query = """
+          SELECT answers.id as id, answers.score as ascore
+          FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
+          INNER JOIN `bigquery-public-data.stackoverflow.posts_answers` as answers
+          on questions.id = answers.parent_id
+          where  questions.id = @a
+          order by answers.score desc limit 1
+          """
+  query_params = [
+      bigquery.ScalarQueryParameter(
+          'a', 'INT64', question_id)
+      ]
+  job_config = bigquery.QueryJobConfig()
+  job_config.query_parameters = query_params
+  query_job = client.query(query, job_config=job_config)
+  results = query_job.result()
+  return {'results': [{'id': row.id,'ascore': row.ascore} for row in results]}
+  
 def send_questions():
   with app.app_context():
     username = "Ankur Kothari"
@@ -153,7 +181,7 @@ def result():
       for similar_word in similar_words:
         word = similar_word[0]
         query = """
-                SELECT id, questions.tags as tags, questions.score as score, questions.title as title, questions.body as body
+                SELECT id, questions.tags as tags, questions.score as score, questions.title as title
                 FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
                 where  questions.tags like @a
                 and title not like "%closed%"
@@ -168,21 +196,21 @@ def result():
         job_config.query_parameters = query_params
         query_job = client.query(query, job_config=job_config)
         results = query_job.result()
-        questions[word] = [[row.tags, row.id,row.score, row.title, row.body] for row in results]
+        questions[word] = [[row.tags, row.id,row.score, row.title] for row in results]
 
       filename = 'finalized_model.sav'
 
       if not os.path.exists(filename):
         kmeans = KMeans(n_clusters=100 )
         X = word2vec_model[word2vec_model.wv.vocab]
-        kmeans.fit(X)        
+        kmeans.fit(X)
         pickle.dump(kmeans, open(filename, 'wb'))
       else:
         kmeans = pickle.load(open(filename, 'rb'))
       labels = kmeans.labels_
 
       word_cluster1 = {}
-      for i, word in enumerate(word2vec_model.wv.vocab): 
+      for i, word in enumerate(word2vec_model.wv.vocab):
           word_cluster1[word] = labels[i]
 
       v1 = defaultdict(list)
@@ -194,7 +222,7 @@ def result():
       v = {}
       num = set()
       for word in similar_words:
-        # show only matching clusters. 
+        # show only matching clusters.
         num.add(v2[word[0]])
       pending_questions = {}
       # for similar_word in similar_words:
@@ -228,7 +256,7 @@ def load_data():
         return data
 
 
-    
+
 
 def load_models():
     #data = load_data()
