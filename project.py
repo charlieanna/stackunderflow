@@ -103,8 +103,8 @@ def top_questions():
   job_config = bigquery.QueryJobConfig()
   query_job = client.query(query, job_config=job_config)
   results = query_job.result()
-
-  return {'results': [[row.tags, row.id, row.score, row.title, row.body] for row in results]}
+  response = {'results': [{'tags': row.tags, 'id': row.id, 'score': row.score, 'title':row.title, 'body': row.body} for row in results]}
+  return response
 
 @app.route("/question")
 def question():
@@ -171,7 +171,8 @@ def send_questions():
 
 @app.route('/result',methods = ['POST', 'GET'])
 def result():
-   if request.method == 'POST':
+  all_questions = []
+  if request.method == 'POST':
       result = request.form
       word2vec_model, fasttext_model = load_models()
       # Once the model has been calculated, it is easy and fast to find most similar words.
@@ -197,7 +198,7 @@ def result():
         query_job = client.query(query, job_config=job_config)
         results = query_job.result()
         questions[word] = [[row.tags, row.id,row.score, row.title] for row in results]
-
+        all_questions += questions[word]
       filename = 'finalized_model.sav'
 
       if not os.path.exists(filename):
@@ -245,7 +246,7 @@ def result():
       #   results1 = query_job.result()
       #   pending_questions[word] = [[row.tags, row.id,row.score, row.title, row.body] for row in results1]
 
-      return {'similar_words': dict(similar_words), 'questions': questions, 'v2': dict(v2), 'v1': v1, 'num': list(num)}
+      return {'all_questions': all_questions, 'similar_words': dict(similar_words), 'questions': questions, 'v2': dict(v2), 'v1': v1, 'num': list(num)}
 
 
 def load_data():
