@@ -87,6 +87,15 @@ def index():
 
     return render_template('index.html')
 
+
+@app.route("/search_tag",methods = ['POST', 'GET'])
+def search_tag():
+  result = request.args
+  search_tag = result.get("search_tag")
+  word2vec_model, fast_text_model = load_models()
+  similar_words = fast_text_model.wv.most_similar([search_tag], topn=20)
+  return dict(similar_words)
+
 @app.route("/top")
 def top_questions():
   import json
@@ -109,7 +118,7 @@ def question():
   result = request.args
   question_id = result.get("id")
   query = """
-          SELECT answers.id as id, answers.score as ascore, questions.title as question
+          SELECT questions.id as question_id, answers.id as answer_id, answers.score as ascore, questions.title as question
           FROM `bigquery-public-data.stackoverflow.posts_questions` as questions
           INNER JOIN `bigquery-public-data.stackoverflow.posts_answers` as answers
           on questions.id = answers.parent_id
@@ -124,7 +133,7 @@ def question():
   job_config.query_parameters = query_params
   query_job = client.query(query, job_config=job_config)
   results = query_job.result()
-  return {'results': [{'id': row.id,'ascore': row.ascore, 'question': row.question} for row in results]}
+  return {'results': [{'question_id':row.question_id, 'answer_id': row.answer_id,'ascore': row.ascore, 'question': row.question} for row in results]}
 
 def send_questions():
   with app.app_context():
@@ -292,12 +301,12 @@ def load_models():
         word2vec_model.save("../word2vec_model")
     else:
         word2vec_model = KeyedVectors.load("../word2vec_model")
-    # if not os.path.exists('../fast_text_model1000'):
-    #     fasttext_model = FastText(data, min_count=1000)
-    #     fasttext_model.save("../fast_text_model1000")
-    # else:
-    #     fasttext_model = FastText.load("../fast_text_model1000")
-    return word2vec_model#, fasttext_model
+    if not os.path.exists('../fast_text_model'):
+        fasttext_model = FastText(data, min_count=1000)
+        fasttext_model.save("../fast_text_model")
+    else:
+        fasttext_model = FastText.load("../fast_text_model")
+    return word2vec_model, fasttext_model
 
 if __name__ == '__main__':
    app.run(debug = True)
