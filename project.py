@@ -26,9 +26,13 @@ import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from flask_api import FlaskAPI
+from flask_caching import Cache
+
 
 app = FlaskAPI(__name__)
 
+cache = Cache(app,config={'CACHE_TYPE': 'simple'})
+cache.init_app(app)
 # app.config['MAIL_SERVER']=config['MAIL_SERVER']
 # app.config['MAIL_PORT'] = config['MAIL_PORT']
 # app.config['MAIL_USERNAME'] = config['MAIL_USERNAME']
@@ -92,8 +96,8 @@ def index():
 def search_tag():
   result = request.args
   search_tag = result.get("search_tag")
-  word2vec_model, fast_text_model = load_models()
-  similar_words = fast_text_model.wv.most_similar([search_tag], topn=20)
+  fasttext_model = load_models()
+  similar_words = fasttext_model.wv.most_similar([search_tag], topn=20)
   return dict(similar_words)
 
 @app.route("/top")
@@ -292,8 +296,7 @@ def load_data():
         return data
 
 
-
-
+@cache.cached(timeout=50000, key_prefix='fasttext_model')
 def load_models():
     data = load_data()
     if not os.path.exists('../word2vec_model'):
@@ -306,7 +309,7 @@ def load_models():
         fasttext_model.save("../fast_text_model")
     else:
         fasttext_model = FastText.load("../fast_text_model")
-    return word2vec_model, fasttext_model
+    return fasttext_model
 
 if __name__ == '__main__':
    app.run(debug = True)
