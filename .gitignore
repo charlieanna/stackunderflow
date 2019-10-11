@@ -2,3 +2,5 @@ config.py
 __pycache__/project.cpython-36.pyc
 jobs.sqlite
 
+.vscode/
+flask/

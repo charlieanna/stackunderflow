@@ -77,16 +77,17 @@ def index():
     # # data to be sent to api
     # data = {'client_id':12430,
     #         'client_secret':'9*Kyrtrtb*iwc6v4soDAuw((',
-    #         'code':'DNkk4aD9QkkCjzvvRQc8uQ))',
+    #         'code':'XRkMstVsKKCLem3vRK8W9A))',
     #         'redirect_uri':'http://localhost:5000'}
 
     # # sending post request and saving response as response object
     # r = requests.post(url = API_ENDPOINT, data = data)
-    # print(r)
+    # print(r, r.text)
     # # extracting response text
     # response = r.text
     # access_token = response.split("=")[1]
-    # print("access_token:", response.split("=")[1])
+    # print("access_token:", access_token)
+    access_token = "EohaLpJYsUfEVvz8O9I(Ow))"
     # print(Tag.query.all())
 
     # jobstores = {
@@ -132,7 +133,7 @@ def top_questions():
   import json
   from pprint import pprint
   data = None
-  with open('../tag_count_score_hash.json') as f:
+  with open('../../../Downloads/tag_count_score_hash.json') as f:
     data = json.load(f)
 
   response = {'data': data}
@@ -141,7 +142,7 @@ def top_questions():
 @app.route("/question")
 def question():
   # get all the anwswers of this question
-  client = bigquery.Client.from_service_account_json('../../My_Project-c23185ac100b.json')
+  client = bigquery.Client.from_service_account_json('../../../Downloads/MyFirstProject-e624aa75f64b.json')
   # get all the questions on this tag selected by the user sorted descending, this way u can get the most important topics
   # or tags which are important.
   # get all the questions on this tag selected by the user sorted descending, this way u can get the most important topics
@@ -252,7 +253,7 @@ def result():
     import json
     from pprint import pprint
     tag_count_hash = None
-    with open('../tag_count_score_hash.json') as f:
+    with open('../../../Downloads/tag_count_score_hash.json') as f:
       tag_count_hash = json.load(f)
       fasttext_model = load_models()
       tags_similar = fasttext_model.wv.most_similar(result['word'], topn=30)
@@ -339,7 +340,7 @@ def result():
 
 
 def load_data():
-    file_name = "../data.csv"
+    file_name = "../../../Downloads/data.csv"
     with open(file_name, 'r') as f:  #opens data file
         reader = csv.reader(f)
         data = list(list(rec) for rec in csv.reader(f, delimiter=',')) #reads csv into a list of lists
@@ -349,16 +350,16 @@ def load_data():
 @cache.cached(timeout=50000, key_prefix='fasttext_model')
 def load_models():
     data = load_data()
-    if not os.path.exists('../word2vec_model'):
+    if not os.path.exists('../../../Downloads/word2vec_model'):
         word2vec_model = Word2Vec(data, min_count=1000, size=200)
-        word2vec_model.save("../word2vec_model")
+        word2vec_model.save("../../../Downloads/word2vec_model")
     else:
-        word2vec_model = KeyedVectors.load("../word2vec_model")
-    if not os.path.exists('../fast_text_model'):
+        word2vec_model = KeyedVectors.load("../../../Downloads/word2vec_model")
+    if not os.path.exists('../../../Downloads/fast_text_model'):
         fasttext_model = FastText(data, min_count=1000)
-        fasttext_model.save("../fast_text_model")
+        fasttext_model.save("../../../Downloads/fast_text_model")
     else:
-        fasttext_model = FastText.load("../fast_text_model")
+        fasttext_model = FastText.load("../../../Downloads/fast_text_model")
     return fasttext_model
 
 if __name__ == '__main__':
