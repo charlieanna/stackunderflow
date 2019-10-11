@@ -72,22 +72,26 @@ mail = Mail(app)
 @app.route("/")
 def index():
     
-    # defining the api-endpoint
-    # API_ENDPOINT = "https://stackoverflow.com/oauth/access_token"
-    # # data to be sent to api
-    # data = {'client_id':12430,
-    #         'client_secret':'9*Kyrtrtb*iwc6v4soDAuw((',
-    #         'code':'XRkMstVsKKCLem3vRK8W9A))',
-    #         'redirect_uri':'http://localhost:5000'}
+    API_ENDPOINT = "https://stackoverflow.com/oauth/access_token"
+    # data to be sent to api
 
-    # # sending post request and saving response as response object
-    # r = requests.post(url = API_ENDPOINT, data = data)
-    # print(r, r.text)
-    # # extracting response text
-    # response = r.text
-    # access_token = response.split("=")[1]
-    # print("access_token:", access_token)
-    access_token = "EohaLpJYsUfEVvz8O9I(Ow))"
+    request.args.get('user')
+    print(request)
+    if 'code' in request.args:
+      data = {'client_id':12430,
+              'client_secret':'9*Kyrtrtb*iwc6v4soDAuw((',
+              'code':request.args.get('code'),
+              'redirect_uri':'http://localhost:5000'}
+
+      # sending post request and saving response as response object
+      r = requests.post(url = API_ENDPOINT, data = data)
+      print(r, r.text)
+      # extracting response text
+      response = r.text
+      print(response)
+      access_token = response.split("=")[1]
+      print("access_token:", access_token)
+    # access_token = "EohaLpJYsUfEVvz8O9I(Ow))"
     # print(Tag.query.all())
 
     # jobstores = {
