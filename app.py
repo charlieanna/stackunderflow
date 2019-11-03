@@ -28,12 +28,12 @@ from apscheduler.triggers.interval import IntervalTrigger
 from flask_api import FlaskAPI
 from flask_caching import Cache
 import json
-# from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-# from datetime import datetime
-# db = SQLAlchemy(app)
-# app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://localhost/charlieana"
+from datetime import datetime
+db = SQLAlchemy(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://localhost/charlieana"
 
 
 # class User(db.Model):
@@ -43,7 +43,7 @@ app = Flask(__name__)
 #   name = db.Column(db.String(80), unique=True, nullable=False)
 #   created_at = db.Column(db.DateTime,default=datetime.utcnow)
 #   updated_at = db.Column(db.DateTime,default=datetime.utcnow)
-  
+
 #   def __repr__(self):
 #       return '<User %r>' % self.name
 
@@ -52,7 +52,7 @@ app = Flask(__name__)
 
 #   id = db.Column(db.Integer, primary_key=True)
 #   name = db.Column(db.String(80), unique=True, nullable=False)
-  
+
 #   def __repr__(self):
 #       return '<Tag %r>' % self.name
 
@@ -71,7 +71,7 @@ mail = Mail(app)
 
 @app.route("/")
 def index():
-    
+
     API_ENDPOINT = "https://stackoverflow.com/oauth/access_token"
     # data to be sent to api
 
